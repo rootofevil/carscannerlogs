@@ -2,8 +2,10 @@ package carscannertodb
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +14,7 @@ import (
 )
 
 type CarData struct {
+	Time   time.Time
 	Second float64
 	Pid    string
 	Value  float64
@@ -24,28 +27,39 @@ func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	api.WritePoint(p)
 }
 
-func readCsv(path, delimiter string) ([]CarData, error) {
-	f, err := os.Open(path)
+func readCsv(filepath, delimiter string) ([]CarData, error) {
+	f, err := os.Open(filepath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
+	dateStr := strings.Split(path.Base(filepath), " ")[0]
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(date)
+
 	FullData := []CarData{}
 
 	scanner := bufio.NewScanner(f)
 	if err := scanner.Err(); err != nil {
 		return FullData, err
 	}
-
+	first := true
 	for scanner.Scan() {
-		data := lineToData(scanner.Text(), delimiter)
+		if first {
+			first = false
+			continue
+		}
+		data := lineToData(scanner.Text(), delimiter, date)
 		FullData = append(FullData, data)
 	}
 
 	return FullData, err
 }
 
-func lineToData(line, delimiter string) CarData {
+func lineToData(line, delimiter string, date time.Time) CarData {
 	data := CarData{}
 	array := strings.Split(line, delimiter)
 	if s, err := strconv.ParseFloat(strings.Trim(array[0], "\""), 64); err == nil {
