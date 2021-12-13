@@ -2,8 +2,8 @@ package carscannertodb
 
 import (
 	"bufio"
-	"fmt"
 	"log"
+	"math"
 	"os"
 	"path"
 	"strconv"
@@ -23,7 +23,7 @@ type CarData struct {
 
 func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	api := client.WriteAPI(org, bucket)
-	p := influxdb2.NewPoint(cd.Pid, map[string]string{"unit": cd.Units}, map[string]interface{}{"value": cd.Value}, time.Now())
+	p := influxdb2.NewPoint(cd.Pid, map[string]string{"unit": cd.Units}, map[string]interface{}{"value": cd.Value}, cd.Time)
 	api.WritePoint(p)
 }
 
@@ -38,7 +38,6 @@ func readCsv(filepath, delimiter string) ([]CarData, error) {
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println(date)
 
 	FullData := []CarData{}
 
@@ -74,6 +73,8 @@ func lineToData(line, delimiter string, date time.Time) CarData {
 		log.Printf("Unable to parse value %s as float", array[2])
 	}
 	data.Units = strings.Trim(array[3], "\"")
+	dur := time.Duration(math.Round(data.Second*1000) * 1000000)
+	data.Time = date.Add(dur)
 
 	return data
 }
