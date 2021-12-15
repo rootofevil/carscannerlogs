@@ -23,7 +23,19 @@ type CarData struct {
 
 func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	api := client.WriteAPI(org, bucket)
-	p := influxdb2.NewPoint(cd.Pid, map[string]string{"unit": cd.Units}, map[string]interface{}{"value": cd.Value}, cd.Time)
+	go (func() {
+		for {
+			e := <-api.Errors()
+			log.Println(e)
+		}
+	})()
+	p := influxdb2.NewPoint(
+		cd.Pid,
+		map[string]string{"unit": cd.Units},
+		map[string]interface{}{"value": cd.Value},
+		cd.Time.Local())
+	log.Println(cd.Time.Hour(), cd.Time.Minute(), cd.Time.Second(), cd.Time.Nanosecond())
+
 	api.WritePoint(p)
 }
 

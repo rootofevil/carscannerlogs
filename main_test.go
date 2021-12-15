@@ -1,6 +1,8 @@
 package carscannertodb
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -22,7 +24,7 @@ func Test_lineToData(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	date, _ := time.Parse("2006-01-02", "2021-11-19")
-	fullDate, _ := time.Parse("2006-01-02 15:04:05.000", "2021-11-19 16:45:38.072")
+	fullDate, _ := time.Parse("2006-01-02 15:04:05.999", "2021-11-19 16:45:38.072")
 	tests = append(tests,
 		struct {
 			name string
@@ -56,9 +58,22 @@ func TestMain(m *testing.M) {
 	// Store the URL of your InfluxDB instance
 	url := "http://localhost:8086"
 	client := influxdb2.NewClient(url, token)
+	fmt.Println(client.Options().SetPrecision(time.Millisecond))
 	defer client.Close()
 	dataset, _ := readCsv("/Users/roe/CarLogs/CarScanner/2021-11-19 16-45-25.csv", ";")
+	dataset = dataset[0:2]
 	for _, d := range dataset {
+		fmt.Printf("%+v\n", d)
 		d.SendToInfluxDb(client, "first", "audi")
+		r, err := client.QueryAPI("first").Query(context.Background(),
+			fmt.Sprintf(
+				`from(bucket:"audi")
+		|> range(start: -30d)
+		|> filter(fn: (r) => r._measurement == "%s")`,
+				d.Pid))
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Printf("%+v\n", r)
 	}
 }
