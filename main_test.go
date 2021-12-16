@@ -1,7 +1,6 @@
 package carscannertodb
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -61,19 +60,32 @@ func TestMain(m *testing.M) {
 	fmt.Println(client.Options().SetPrecision(time.Millisecond))
 	defer client.Close()
 	dataset, _ := readCsv("/Users/roe/CarLogs/CarScanner/2021-11-19 16-45-25.csv", ";")
-	dataset = dataset[0:2]
+	// dataset = dataset[0:2]
 	for _, d := range dataset {
 		fmt.Printf("%+v\n", d)
 		d.SendToInfluxDb(client, "first", "audi")
-		r, err := client.QueryAPI("first").Query(context.Background(),
-			fmt.Sprintf(
-				`from(bucket:"audi")
-		|> range(start: -30d)
-		|> filter(fn: (r) => r._measurement == "%s")`,
-				d.Pid))
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Printf("%+v\n", r)
+		// 	query := fmt.Sprintf(
+		// 		`from(bucket: "audi")
+		// |> range(start: -30d)
+		// |> filter(fn: (r) => r._measurement == "%s")`,
+		// 		d.Pid)
+		// 	r, err := client.QueryAPI("first").Query(context.Background(), query)
+		// 	if err == nil {
+		// 		// Iterate over query response
+		// 		for r.Next() {
+		// 			// Notice when group key has changed
+		// 			if r.TableChanged() {
+		// 				fmt.Printf("table: %s\n", r.TableMetadata().String())
+		// 			}
+		// 			// Access data
+		// 			fmt.Printf("value: %v\n", r.Record().Value())
+		// 		}
+		// 		// Check for an error
+		// 		if r.Err() != nil {
+		// 			fmt.Printf("query parsing error: %s\n", r.Err().Error())
+		// 		}
+		// 	} else {
+		// 		panic(err)
+		// 	}
 	}
 }

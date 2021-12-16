@@ -26,7 +26,9 @@ func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	go (func() {
 		for {
 			e := <-api.Errors()
-			log.Println(e)
+			if e != nil {
+				log.Println(e)
+			}
 		}
 	})()
 	p := influxdb2.NewPoint(
@@ -34,7 +36,6 @@ func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 		map[string]string{"unit": cd.Units},
 		map[string]interface{}{"value": cd.Value},
 		cd.Time.Local())
-	log.Println(cd.Time.Hour(), cd.Time.Minute(), cd.Time.Second(), cd.Time.Nanosecond())
 
 	api.WritePoint(p)
 }
@@ -87,6 +88,8 @@ func lineToData(line, delimiter string, date time.Time) CarData {
 	data.Units = strings.Trim(array[3], "\"")
 	dur := time.Duration(math.Round(data.Second*1000) * 1000000)
 	data.Time = date.Add(dur)
+	// date = time.Date(2021, 12, 15, 2, 11, 3, 0, time.UTC)
+	// data.Time = date
 
 	return data
 }
