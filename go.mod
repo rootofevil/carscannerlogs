@@ -1,4 +1,4 @@
-module carscannertodb
+module github.com/rootofevil/carscannerlogs
 
 go 1.17
 
