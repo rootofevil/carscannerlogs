@@ -40,7 +40,7 @@ func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	api.WritePoint(p)
 }
 
-func readCsv(filepath, delimiter string) ([]CarData, error) {
+func ReadCsv(filepath, delimiter string) ([]CarData, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		log.Fatal(err)
