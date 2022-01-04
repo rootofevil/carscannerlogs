@@ -9,6 +9,7 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+var  testdatapath  string = "test\\2021-11-19 16-45-25.csv"
 func Test_lineToData(t *testing.T) {
 	type args struct {
 		line      string
@@ -49,7 +50,10 @@ func Test_lineToData(t *testing.T) {
 }
 
 func TestReadCsv(t *testing.T) {
-	readCsv("/Users/roe/CarLogs/CarScanner/2021-11-19 16-45-25.csv", ";")
+	_, err := ReadCsv(testdatapath, ";")
+	if err != nil {
+		t.Fail()
+	}
 }
 
 func TestMain(m *testing.M) {
@@ -59,7 +63,7 @@ func TestMain(m *testing.M) {
 	client := influxdb2.NewClient(url, token)
 	fmt.Println(client.Options().SetPrecision(time.Millisecond))
 	defer client.Close()
-	dataset, _ := readCsv("/Users/roe/CarLogs/CarScanner/2021-11-19 16-45-25.csv", ";")
+	dataset, _ := ReadCsv(testdatapath, ";")
 	// dataset = dataset[0:2]
 	for _, d := range dataset {
 		fmt.Printf("%+v\n", d)
