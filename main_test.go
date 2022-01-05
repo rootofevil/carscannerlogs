@@ -9,7 +9,8 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-var  testdatapath  string = "test\\2021-11-19 16-45-25.csv"
+var testdatapath string = "test\\2021-11-19 16-45-25.csv"
+
 func Test_lineToData(t *testing.T) {
 	type args struct {
 		line      string
@@ -50,20 +51,49 @@ func Test_lineToData(t *testing.T) {
 }
 
 func TestReadCsv(t *testing.T) {
-	_, err := ReadCsv(testdatapath, ";")
-	if err != nil {
-		t.Fail()
+	type args struct {
+		path  string
+		delim string
 	}
+	tests := []struct {
+		name string
+		args args
+		want error
+	}{
+		{name: "Windows Style Path", args: args{path: "test\\2021-11-19 16-45-25.csv", delim: ";"}, want: nil},
+		{name: "Linux Style Path", args: args{path: "test/2021-11-19 16-45-25.csv", delim: ";"}, want: nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := ReadCsv(tt.args.path, tt.args.delim); err != nil {
+				t.Errorf("error = %v, want %v", err, tt.want)
+			} else {
+				t.Logf("Test %s, no errors", tt.name)
+			}
+		})
+	}
+	// _, err := ReadCsv(testdatapath, ";")
+	// if err != nil {
+	// 	t.Fail()
+	// }
+	// testdatapath = "test/2021-11-19 16-45-25.csv"
+	// _, err := ReadCsv(testdatapath, ";")
+	// if err != nil {
+	// 	t.Fail()
+	// }
 }
 
-func TestMain(m *testing.M) {
+func TestMain(t *testing.T) {
 	token := "F-QFQpmCL9UkR3qyoXnLkzWj03s6m4eCvYgDl1ePfHBf9ph7yxaSgQ6WN0i9giNgRTfONwVMK1f977r_g71oNQ=="
 	// Store the URL of your InfluxDB instance
 	url := "http://localhost:8086"
 	client := influxdb2.NewClient(url, token)
 	fmt.Println(client.Options().SetPrecision(time.Millisecond))
 	defer client.Close()
-	dataset, _ := ReadCsv(testdatapath, ";")
+	dataset, err := ReadCsv(testdatapath, ";")
+	if err != nil {
+		t.Fail()
+	}
 	// dataset = dataset[0:2]
 	for _, d := range dataset {
 		fmt.Printf("%+v\n", d)

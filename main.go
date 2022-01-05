@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -40,13 +40,13 @@ func (cd CarData) SendToInfluxDb(client influxdb2.Client, org, bucket string) {
 	api.WritePoint(p)
 }
 
-func ReadCsv(filepath, delimiter string) ([]CarData, error) {
-	f, err := os.Open(filepath)
+func ReadCsv(csvpath, delimiter string) ([]CarData, error) {
+	f, err := os.Open(csvpath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
-	dateStr := strings.Split(path.Base(filepath), " ")[0]
+	dateStr := strings.Split(filepath.Base(csvpath), " ")[0]
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		log.Println(err)
